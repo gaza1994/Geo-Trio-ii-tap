@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="820" height="360" fill="#fff"/>
+  <text x="410" y="30" text-anchor="middle" font-size="19" font-weight="bold">Wiring: three wires, receive only</text>
+  <rect x="40" y="60" width="290" height="270" rx="12" fill="#f4f4f4" stroke="#888"/>
+  <text x="185" y="88" text-anchor="middle" font-weight="bold">Geo Trio II (2022 board)</text>
+  <rect x="490" y="60" width="290" height="270" rx="12" fill="#fff6d6" stroke="#d49b00"/>
+  <text x="635" y="88" text-anchor="middle" font-weight="bold">ESP32-C3 SuperMini</text>
+  <g>
+    <circle cx="310" cy="140" r="9" fill="#ffd600" stroke="#333"/><text x="60" y="135" font-weight="bold">J8 pin 1 (ZB UART0 TX)</text><text x="60" y="155" font-size="13" fill="#555">3.3 V logic, idles high</text>
+    <circle cx="510" cy="140" r="9" fill="#ffd600" stroke="#333"/><text x="530" y="135" font-weight="bold">GPIO20 (RX)</text><text x="530" y="155" font-size="13" fill="#555">uart rx_pin</text>
+    <line x1="319" y1="140" x2="501" y2="140" stroke="#d49b00" stroke-width="4"/>
+  </g>
+  <g>
+    <circle cx="310" cy="210" r="9" fill="#e53935" stroke="#333"/><text x="60" y="205" font-weight="bold">TP69</text><text x="60" y="225" font-size="13" fill="#555">5 V from USB (5.08 V measured)</text>
+    <circle cx="510" cy="210" r="9" fill="#e53935" stroke="#333"/><text x="530" y="205" font-weight="bold">5V</text><text x="530" y="225" font-size="13" fill="#555">board regulator does 3.3 V</text>
+    <line x1="319" y1="210" x2="501" y2="210" stroke="#e53935" stroke-width="4"/>
+  </g>
+  <g>
+    <circle cx="310" cy="280" r="9" fill="#333" stroke="#333"/><text x="60" y="275" font-weight="bold">BT2 battery contact</text><text x="60" y="295" font-size="13" fill="#555">GND (also C1 -, USB shell)</text>
+    <circle cx="510" cy="280" r="9" fill="#333" stroke="#333"/><text x="530" y="275" font-weight="bold">G</text><text x="530" y="295" font-size="13" fill="#555">ground</text>
+    <line x1="319" y1="280" x2="501" y2="280" stroke="#333" stroke-width="4"/>
+  </g>
+  <text x="410" y="350" text-anchor="middle" font-size="13" fill="#555">C3 TX (GPIO21) is left unconnected so nothing can ever be sent back into the IHD.</text>
+</svg>

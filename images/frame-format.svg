@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 350" font-family="Helvetica, Arial, sans-serif" font-size="14">
+  <rect width="980" height="350" fill="#fff"/>
+  <text x="490" y="28" text-anchor="middle" font-size="19" font-weight="bold">NXP serial frame on J8 (after unescaping)</text>
+  <g font-family="Menlo, Consolas, monospace" font-size="15" text-anchor="middle">
+    <rect x="20" y="60" width="70" height="56" fill="#ddd" stroke="#666"/><text x="55" y="85">01</text><text x="55" y="105" font-size="11" font-family="Helvetica">start</text>
+    <rect x="90" y="60" width="130" height="56" fill="#e3f2fd" stroke="#666"/><text x="155" y="85">80 02</text><text x="155" y="105" font-size="11" font-family="Helvetica">message type (2)</text>
+    <rect x="220" y="60" width="130" height="56" fill="#e8f5e9" stroke="#666"/><text x="285" y="85">00 3D</text><text x="285" y="105" font-size="11" font-family="Helvetica">length L (2)</text>
+    <rect x="350" y="60" width="90" height="56" fill="#fff6d6" stroke="#666"/><text x="395" y="85">C5</text><text x="395" y="105" font-size="11" font-family="Helvetica">checksum (1)</text>
+    <rect x="440" y="60" width="450" height="56" fill="#f3e5f5" stroke="#666"/><text x="665" y="85">data ... (L + 2 bytes)</text><text x="665" y="105" font-size="11" font-family="Helvetica">Zigbee APS indication: profile 0109, cluster, endpoints, ZCL payload</text>
+    <rect x="890" y="60" width="70" height="56" fill="#ddd" stroke="#666"/><text x="925" y="85">03</text><text x="925" y="105" font-size="11" font-family="Helvetica">end</text>
+  </g>
+  <text x="20" y="155" font-weight="bold">Escaping</text>
+  <text x="20" y="177">Bytes 0x00 to 0x07 inside a frame are sent as 0x02 followed by (byte XOR 0x08). Only 0x08 to 0x0F ever follow 0x02.</text>
+  <text x="20" y="210" font-weight="bold">Checksum</text>
+  <text x="20" y="232">XOR of every unescaped byte except the checksum itself (type, length and data). Frame length must equal L + 7.</text>
+  <text x="20" y="254">Validated on 6,797 captured frames. Frames that fail are dropped, which removes the occasional merged or truncated frame.</text>
+  <text x="20" y="287" font-weight="bold">Exception</text>
+  <text x="20" y="309">Type 0x8028 is the Zigbee chip's plain-text debug log ("Initiating rejoin as MAC restored").</text>
+  <text x="20" y="331">Some of these fail the checksum by design: read the text, and don't count them as damaged.</text>
+</svg>

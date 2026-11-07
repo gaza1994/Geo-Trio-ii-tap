@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 435" font-family="Helvetica, Arial, sans-serif" font-size="14">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker>
+  <marker id="ay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#d49b00"/></marker></defs>
+  <rect width="960" height="430" fill="#ffffff"/>
+  <text x="480" y="30" text-anchor="middle" font-size="19" font-weight="bold">Data path: smart meter to Home Assistant</text>
+  <!-- meter -->
+  <rect x="20" y="120" width="150" height="110" rx="10" fill="#eef3f8" stroke="#6b8bab"/>
+  <text x="95" y="150" text-anchor="middle" font-weight="bold">Smart meters</text>
+  <text x="95" y="172" text-anchor="middle">Electricity (ESME)</text>
+  <text x="95" y="192" text-anchor="middle">Gas (GSME, via</text>
+  <text x="95" y="210" text-anchor="middle">GPF proxy)</text>
+  <line x1="170" y1="175" x2="232" y2="175" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+  <text x="201" y="163" text-anchor="middle" font-size="12">Zigbee SE</text>
+  <!-- trio -->
+  <rect x="235" y="60" width="380" height="300" rx="12" fill="#f7f7f7" stroke="#888" stroke-dasharray="6 4"/>
+  <text x="425" y="85" text-anchor="middle" font-weight="bold">Geo Trio II IHD (T2CO-A-PCB-001_3)</text>
+  <rect x="255" y="130" width="120" height="90" rx="8" fill="#e8f5e9" stroke="#5a9a5f"/>
+  <text x="315" y="160" text-anchor="middle" font-weight="bold">NXP JN5169</text>
+  <text x="315" y="180" text-anchor="middle">Zigbee chip</text>
+  <rect x="465" y="130" width="130" height="90" rx="8" fill="#e8f5e9" stroke="#5a9a5f"/>
+  <text x="530" y="160" text-anchor="middle" font-weight="bold">Main MCU</text>
+  <text x="530" y="180" text-anchor="middle">display, buttons</text>
+  <line x1="375" y1="175" x2="462" y2="175" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+  <text x="419" y="165" text-anchor="middle" font-size="12">UART</text>
+  <text x="419" y="196" text-anchor="middle" font-size="12">115200 8N1</text>
+  <rect x="465" y="260" width="130" height="70" rx="8" fill="#e8f5e9" stroke="#5a9a5f"/>
+  <text x="530" y="288" text-anchor="middle" font-weight="bold">ESP8285</text>
+  <text x="530" y="308" text-anchor="middle">on-board WiFi</text>
+  <line x1="530" y1="220" x2="530" y2="257" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+  <!-- tap point -->
+  <circle cx="418" cy="175" r="7" fill="#ffd600" stroke="#d49b00" stroke-width="2"/>
+  <text x="418" y="240" text-anchor="middle" font-size="12" font-weight="bold" fill="#b07e00">J8 TX test pad</text>
+  <line x1="418" y1="182" x2="418" y2="228" stroke="#d49b00" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <!-- C3 -->
+  <rect x="300" y="370" width="230" height="50" rx="10" fill="#fff6d6" stroke="#d49b00" stroke-width="2"/>
+  <text x="415" y="392" text-anchor="middle" font-weight="bold">ESP32-C3 SuperMini (ESPHome)</text>
+  <text x="415" y="410" text-anchor="middle" font-size="12">listen-only: GPIO20 RX, no TX</text>
+  <path d="M418,242 L418,367" stroke="#d49b00" stroke-width="2.5" marker-end="url(#ay)"/>
+  <!-- cloud -->
+  <rect x="680" y="110" width="250" height="80" rx="10" fill="#f0f0f0" stroke="#999"/>
+  <text x="805" y="140" text-anchor="middle" font-weight="bold">Wiser Insights+ cloud</text>
+  <text x="805" y="160" text-anchor="middle" font-size="12">(unchanged, still works)</text>
+  <path d="M595,285 L640,285 L640,150 L677,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+  <!-- HA -->
+  <rect x="680" y="315" width="250" height="105" rx="10" fill="#e3f2fd" stroke="#2f7fc1" stroke-width="2"/>
+  <text x="805" y="343" text-anchor="middle" font-weight="bold">Home Assistant</text>
+  <text x="805" y="364" text-anchor="middle" font-size="12">live W every 30 s, meter readings,</text>
+  <text x="805" y="382" text-anchor="middle" font-size="12">costs, tariff, gas kWh, history,</text>
+  <text x="805" y="400" text-anchor="middle" font-size="12">Energy dashboard</text>
+  <line x1="530" y1="395" x2="677" y2="395" stroke="#2f7fc1" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="604" y="385" text-anchor="middle" font-size="11" fill="#2f7fc1">WiFi, ESPHome API</text>
+</svg>
