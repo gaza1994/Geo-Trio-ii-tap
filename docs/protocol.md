@@ -93,6 +93,8 @@ C5                         checksum
 
 Attribute IDs and values are **little-endian**. A practical way to find the ZCL header: locate `01 09` (the profile), read the cluster and endpoint after it, then scan forward for a frame-control byte that's preceded by a plausible 2-byte payload length. That's what both decoders do.
 
+**The profile is always at byte 9** (in all 1,257 meter-data frames I've captured). Search from there, not from the start of the frame: the checksum and status bytes before it can read `01 09` by coincidence. That happened once on my install, filing a normal reading under "endpoint 171, cluster 0x4100".
+
 ## Endpoints
 
 | Endpoint | Clusters seen | Contents |
@@ -216,6 +218,6 @@ This matches the meter's own kWh figures.
 
 ## Not yet confirmed
 
-- **Export with solar**: attribute 0x0001 on endpoint 1 is the standard export register. It reads 0.011 kWh on my non-solar meter. Live power is signed, so it should go negative when exporting.
+- ~~**Export with solar**~~: **confirmed** ([issue #1](https://github.com/gaza1994/Geo-Trio-ii-tap/issues/1)). Attribute 0x0001 on endpoint 1 is export and matches the Trio's display (6,700.787 → 6,703.116 kWh while import stayed at 14,524.833 kWh), and live power goes negative while exporting (−2,642 W). Export history registers (today, yesterday, months) haven't been captured yet.
 - **Time-of-use tariffs**: mine has one rate (tier 1). Multi-rate tariffs presumably send several Publish Price commands or use the tier fields.
 - **0x8073**: valid frame, empty payload, seen once. Probably an internal Zigbee stack event.

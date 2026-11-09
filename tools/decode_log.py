@@ -88,7 +88,7 @@ def decode(raw):
     if x != u[4]: return f
     f["ok"] = True
     if f["type"] != 0x8002: return f
-    p = next((i for i in range(2, len(u) - 7) if u[i] == 0x01 and u[i + 1] == 0x09), None)
+    p = next((i for i in range(9, len(u) - 7) if u[i] == 0x01 and u[i + 1] == 0x09), None)
     if p is None: return f
     f["cluster"] = (u[p + 2] << 8) | u[p + 3]; f["endpoint"] = u[p + 4]
     z = None

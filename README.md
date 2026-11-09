@@ -12,8 +12,36 @@ It builds on [nadnerb33/geotrio2mqtt](https://github.com/nadnerb33/geotrio2mqtt)
 
 ---
 
+## Quick start
+
+Just want it working? This is everything, in order. The rest of this page explains how and why.
+
+1. **Check your board.** Remove the back of the Trio II. This was done on **T2CO-A-PCB-001_3 (© 2022)**; the 2017 board (TR2L) works the same way but grounds differently (see [geotrio2mqtt](https://github.com/nadnerb33/geotrio2mqtt)).
+2. **Get the parts.** An ESP32-C3 SuperMini, some 30 AWG wire, a soldering iron and flux, a multimeter, insulating tape.
+3. **Flash the C3 first, over USB.** Put the three files from [`firmware/`](firmware/) in your ESPHome config folder, copy [`secrets.example.yaml`](firmware/secrets.example.yaml) into your `secrets.yaml` and fill it in, then ESPHome Builder → Install → Plug into this computer.
+4. **Wire three points** (IHD unplugged):
+
+   | Trio II | ESP32-C3 |
+   |---|---|
+   | **J8 pin 1** (TX, nearest the "J8" label) | **GPIO20** |
+   | **TP69** (next to the micro-USB) | **5V** |
+   | **BT2** battery contact | **G** |
+
+   Photo: [where each one is](images/board-2022-tap-points.jpg). Leave the C3's TX unconnected.
+5. **Check with a multimeter** before powering: each wire beeps end to end; **5V to G must not beep**.
+6. **Insulate and fit.** Tape under and over the C3, tape every joint, tuck it in the battery bay, cover on.
+7. **Plug the IHD in.** Within a minute Home Assistant finds "Geo Trio Tap". Check: **Tariff source** = `meter`, **Damaged frames rejected** ≈ 0.
+8. **Energy dashboard** (Settings → Dashboards → Energy):
+   - Electricity: `Electricity meter`, price from `Electricity unit rate`, live power `Electricity power`.
+   - Gas: `Gas meter (kWh)`, price from `Gas unit rate`.
+
+That's it. Updates after that are wireless.
+
+---
+
 ## Contents
 
+0. [Quick start](#quick-start)
 1. [Why](#why)
 2. [What you get](#what-you-get)
 3. [How it works](#how-it-works)
@@ -41,7 +69,7 @@ All of this updates locally in Home Assistant, and all of it matched the IHD's o
 
 | | Electricity | Gas |
 |---|---|---|
-| Live power | **every 30 s** (30 s average of ~10 s readings) | n/a |
+| Live power | **every ~10 s** | **estimated** from the meter's half-hourly readings (kW) |
 | Meter reading | kWh, full resolution | m³, plus a **kWh running total** safe for the Energy dashboard |
 | Today / yesterday / this month | kWh and £ (incl. standing charge) | kWh and £ (incl. standing charge) |
 | Tariff, **from the meter** | unit rate, standing charge | unit rate, standing charge, volume correction factor, calorific value |
@@ -184,9 +212,11 @@ Design decisions worth knowing about:
 - **Tariff from the meter, remembered in flash.** Defaults are only used until the meter's own values arrive; a restart or power cut doesn't lose them. Tariff bursts are debounced (30 s) so Home Assistant sees one update, not six.
 - **Midnight rollover.** "Today" values reset at midnight; the last value before the drop is published as "yesterday" straight away, and the meter's own "yesterday" confirms it later (they agreed to within 5 Wh on my first night). Yesterday's values survive a restart, but only if they were saved *today*, so a restart after midnight can't resurrect the wrong day.
 - **Gas kWh as a running total.** Each new m³ is converted at the volume correction and calorific value **in force at that moment** and added on. A calorific value change can never rewrite history, so it's safe for the Energy dashboard (see below).
-- **Light on the database.** Live power is a 30 s average; "today"/"month"/cost sensors only publish when they've moved 10 Wh or 1p; diagnostics every 5 minutes. The meter readings themselves stay at full resolution. This cut what the C3 writes to Home Assistant's database by roughly 80% with no visible difference.
+- **Light on the database.** "Today"/"month"/cost sensors only publish when they've moved 10 Wh or 1p, and diagnostics every 5 minutes. Live power and the meter readings stay at full rate (every ~10 s), so the live view keeps pace with the IHD.
+- **Gas power estimate.** The meter only reports gas every 30 minutes, so "Gas power" (kW) is worked out from how much the reading moved between reports. It's a half-hour figure, the same thing the IHD's gas cost-per-hour shows, and drops to 0 after 40 minutes with no gas.
 - **Tells you when something new happens.** A list of every message kind seen (200 so far); anything new is logged and published to a sensor, with its raw bytes. The Zigbee chip's own status text (type 0x8028) gets its own sensor, so you can see things like `Initiating rejoin as MAC restored` when the IHD briefly loses the meter.
 - **Stale-data alarm.** A binary sensor turns on if no reading arrives for 5 minutes.
+- **Finds the Zigbee data at a fixed position.** The Smart Energy marker (`01 09`) is always at byte 9 of a meter-data frame. Searching from the start of the frame occasionally matched the checksum and status bytes instead (when they happened to read `01 09`), mis-filing a normal reading as a "new message kind". Fixed by searching from byte 9.
 
 ## Home Assistant
 
@@ -207,10 +237,12 @@ Full notes in [docs/home-assistant.md](docs/home-assistant.md). The essentials:
 - **Power the C3 from the IHD.** Then it boots alongside the IHD and catches the startup burst, which is when the tariff and history arrive.
 - **Flash saves are batched** (every 5 minutes by default), so a power cut can lose a value received just before. The firmware forces an immediate save for the tariff and yesterday values.
 - **ESPHome's "Update queued"** just means the Builder hasn't spotted the device on the network yet. It installs when it does.
+- **Search for markers where they live.** Scanning a whole frame for a two-byte marker will eventually match by coincidence: here, a checksum of `01` followed by `09`. If the position is fixed, check the position.
+- **The IHD's Zigbee chip can get stuck in a loop.** Once, it logged "Initiating rejoin as MAC restored" several times a second while still delivering readings. Unplugging the IHD for 30 seconds cleared it.
 
 ## Open questions
 
-- **Solar export.** Electricity endpoint 1 also sends attribute 0x0001, *CurrentSummationReceived*: the Smart Energy register for export. It reads 0.011 kWh on my non-solar meter. If you have solar, a capture would confirm it, and live power (a signed value) should go negative while exporting.
+- ~~**Solar export.**~~ **Confirmed** by a solar user in [issue #1](https://github.com/gaza1994/Geo-Trio-ii-tap/issues/1): export is attribute **0x0001** (*CurrentSummationReceived*) on electricity endpoint 1, matching the value the Trio shows (6,700.787 → 6,703.116 kWh while import stood still), and live power **goes negative** while exporting (−2,642 W in their capture). The firmware doesn't publish an export sensor yet: PRs welcome from anyone with solar to test it.
 - **Time-of-use tariffs.** Mine is a single rate. Publish Price has tier fields I haven't seen used.
 - **Message type 0x8073.** Valid, empty payload, rare. Probably an internal Zigbee stack event.
 
@@ -226,4 +258,3 @@ python3 tools/decode_log.py samples/startup-burst.txt --summary
 - The Zigbee Smart Energy specification (ZCL clusters 0x0700, 0x0702, 0x0705). The serial framing resembles NXP's JN516x host protocol as used by ZiGate; I worked the details (escape, checksum, length) out from captures, so trust the description here over other sources.
 
 MIT licence, see [LICENSE](LICENSE).
-"# Geo-Trio-ii-tap" 

@@ -83,6 +83,8 @@ globals:
   # gas kWh counted as it's used: each new m³ converted at the factor in force at that moment
   - { id: g_gas_kwh_total, type: double, restore_value: yes, initial_value: '0' }
   - { id: g_gas_kwh_base_m3, type: double, restore_value: yes, initial_value: '0' }
+  # when the gas reading last moved, for the gas power estimate
+  - { id: g_gas_change_ms, type: uint32_t, initial_value: '0' }
   # unit-rate calculation from the meter's own cost/usage
   - { id: g_e_anchor_kwh,  type: double, initial_value: '-1' }
   - { id: g_e_anchor_cost, type: double, initial_value: '-1' }
@@ -247,8 +249,17 @@ uart:
                       id(g_gas_kwh_base_m3) = m3;
                       ESP_LOGI("trio", "Gas kWh total initialised at %.3f (%.3f m3 x %.4f)", id(g_gas_kwh_total), m3, f);
                     } else if (m3 > base) {
-                      id(g_gas_kwh_total) += (m3 - base) * f;
+                      double dk = (m3 - base) * f;
+                      id(g_gas_kwh_total) += dk;
                       id(g_gas_kwh_base_m3) = m3;
+                      // Gas power: kWh used since the reading last moved, over the time between.
+                      // The meter reports every 30 min, so cap the interval at 30 min (after a quiet spell,
+                      // the use happened in the latest half hour, not spread over the whole gap).
+                      uint32_t now = millis();
+                      double hours = id(g_gas_change_ms) == 0 ? 0.5   // first change since boot: one reporting period
+                                   : std::min<double>((now - id(g_gas_change_ms)) / 3600000.0, 0.5);
+                      if (hours > 0.05) id(gas_power).publish_state(dk / hours);
+                      id(g_gas_change_ms) = now;
                     }
                     id(gas_meter_kwh).publish_state(id(g_gas_kwh_total));
                   } else if (m3 < last && last - m3 < 0.05) ESP_LOGD("trio", "Ignored stale gas reading %.3f (last %.3f)", m3, last);
@@ -328,11 +339,16 @@ interval:
   - interval: 5min
     then:
       - script.execute: publish_tariff
+      - lambda: |-
+          // no gas reading change for 40 min -> nothing's burning
+          uint32_t last = id(g_gas_change_ms);
+          bool quiet = last != 0 ? (millis() - last > 2400000) : (millis() > 2400000);
+          if (quiet && id(gas_power).state != 0) id(gas_power).publish_state(0);
 
 # ---------------------------------------------------------------------------------------
 sensor:
   # Electricity
-  - { platform: template, id: elec_power, name: "Electricity power", unit_of_measurement: W, device_class: power, state_class: measurement, accuracy_decimals: 0, filters: [ { throttle_average: 30s } ] }
+  - { platform: template, id: elec_power, name: "Electricity power", unit_of_measurement: W, device_class: power, state_class: measurement, accuracy_decimals: 0 }
   - { platform: template, id: elec_meter, name: "Electricity meter", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3 }
   - { platform: template, id: elec_today, name: "Electricity today", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3, filters: [ { delta: 0.01 } ] }
   - platform: template
@@ -368,6 +384,7 @@ sensor:
   - { platform: template, id: gas_meter_m3, name: "Gas meter", unit_of_measurement: "m³", device_class: gas, state_class: total_increasing, accuracy_decimals: 3 }
   # Running total: each new m³ is converted at the CF/CV in force when it was used, so a CV change never rewrites history.
   - { platform: template, id: gas_meter_kwh, name: "Gas meter (kWh)", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 2 }
+  - { platform: template, id: gas_power, name: "Gas power", unit_of_measurement: kW, device_class: power, state_class: measurement, accuracy_decimals: 2, icon: "mdi:fire" }
   - { platform: template, id: gas_today, name: "Gas today", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3, filters: [ { delta: 0.01 } ] }
   - platform: template
     id: gas_yesterday
