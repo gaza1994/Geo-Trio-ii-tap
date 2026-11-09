@@ -8,12 +8,13 @@ The C3 shows up through the ESPHome integration as one device. Everything below 
 
 | Sensor | Updates | Use it for |
 |---|---|---|
-| Electricity power | 30 s average | live draw, alerts, Energy "Now" |
+| Electricity power | every reading (~10 s) | live draw, cost per hour, alerts, Energy "Now" |
 | Electricity meter | every meter tick | **Energy dashboard** (electricity) |
 | Electricity today / yesterday / this month | on 10 Wh change | glanceable cards |
 | Electricity cost today / yesterday / this month | on 1p change | glanceable cards (**includes standing charge**) |
 | Gas meter | every 30 min | the raw m³ reading |
 | Gas meter (kWh) | with the gas meter | **Energy dashboard** (gas) |
+| Gas power | when the gas reading moves (every 30 min while in use) | estimated gas use in kW over the last half hour; × gas unit rate = cost per hour |
 | Gas today / yesterday / this month, gas costs | on 10 Wh / 1p change | glanceable cards |
 | Electricity / gas unit rate, standing charge | when the tariff arrives | Energy dashboard prices, sanity checks |
 | Gas volume correction, calorific value, kWh per m³ | when the tariff arrives | reference |
@@ -153,12 +154,22 @@ actions:
 
 ## Keeping the database lean
 
-At full rate, a tap like this is easily the biggest writer to Home Assistant's database: on mine, seven sensors were updating together on every watt-hour, about 55,000 rows a day, over half of everything the house recorded. The firmware's filters bring that down by roughly 80%:
+At full rate, a tap like this is easily the biggest writer to Home Assistant's database: on mine, seven sensors were updating together on every watt-hour, about 55,000 rows a day, over half of everything the house recorded. Most of that was the same information seven ways, so the firmware filters the glanceable sensors:
 
 ```yaml
-filters: [ { throttle_average: 30s } ]   # live power
 filters: [ { delta: 0.01 } ]             # today / month (10 Wh) and costs (1p)
 update_interval: 5min                    # uptime, WiFi signal
 ```
 
-The meter readings that feed the Energy dashboard are left at full resolution, and the filtered sensors always show the meter's true value (they publish less often, they don't round), so nothing drifts.
+Live power and the meter readings stay at full rate. (I tried a 30-second average on live power too; it saves more, but the dashboard then lags the IHD by up to half a minute. With 30 days of history the extra rows are nothing to worry about.) The filtered sensors always show the meter's true value (they publish less often, they don't round), so nothing drifts.
+
+### Cost per hour, like the IHD
+
+A Mushroom template card's secondary line, for example:
+
+```jinja
+{% set w = states('sensor.geo_trio_tap_electricity_power') | float(0) %}
+{{ '£%.2f' | format(w / 1000 * states('sensor.geo_trio_tap_electricity_unit_rate') | float(0)) }}/hour
+```
+
+For gas, use `Gas power` (kW) × `Gas unit rate`. Like the IHD, this excludes the standing charge.

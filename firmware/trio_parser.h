@@ -66,7 +66,9 @@ static inline TrioFrame trio_decode(const std::vector<uint8_t> &raw) {
   f.msg_type = (uint16_t(u[0]) << 8) | u[1];
   if (f.msg_type != 0x8002) return f;
   size_t p = 0; bool found = false;
-  for (size_t i = 2; i + 7 < u.size(); i++)
+  // Profile 0x0109 is always at byte 9 (1,257 of 1,257 captured frames). Starting the search there stops
+  // the checksum + status bytes being mistaken for it when they happen to read 01 09 (seen 9 Nov 2026).
+  for (size_t i = 9; i + 7 < u.size(); i++)
     if (u[i] == 0x01 && u[i + 1] == 0x09) { p = i; found = true; break; }
   if (!found) return f;
   f.cluster = (uint16_t(u[p + 2]) << 8) | u[p + 3];

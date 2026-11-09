@@ -79,6 +79,14 @@ The IHD briefly losing and rejoining the meter's network, and the chip logging i
 
 Lesson: when a counter says something's wrong, log *what* it's counting before believing it.
 
-## 10. What's still unknown
+## 10. A false match
 
-See [protocol.md](protocol.md#not-yet-confirmed): solar export (attribute 0x0001 looks right but needs a solar install to confirm), time-of-use tariffs, and message type 0x8073.
+A "new message kind" alert arrived for *endpoint 171, cluster 0x4100*. Decoded by hand, it was an ordinary electricity report. The decoder searched for the Smart Energy marker `01 09` from the start of the frame, and in this one the checksum was `01` and the next status byte `09`. Across every captured meter frame the real marker is at byte 9, so the search now starts there. All 6,811 captured frames decode identically before and after.
+
+## 11. Confirmed by others
+
+A solar user confirmed export is attribute 0x0001 and that live power goes negative while exporting ([issue #1](https://github.com/gaza1994/Geo-Trio-ii-tap/issues/1)).
+
+## 12. What's still unknown
+
+See [protocol.md](protocol.md#not-yet-confirmed): time-of-use tariffs, export history registers, and message type 0x8073.
