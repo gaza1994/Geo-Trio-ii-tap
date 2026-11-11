@@ -78,8 +78,8 @@ globals:
   - { id: g_tariff_from_meter, type: bool, restore_value: yes, initial_value: 'false' }
   - { id: g_tariff_time,   type: uint32_t, restore_value: yes, initial_value: '0' }
   # meter-reading sanity filters (not persisted)
-  - { id: g_last_elec_kwh, type: double, initial_value: '0' }
-  - { id: g_last_gas_m3,   type: double, initial_value: '0' }
+  - { id: g_last_elec_import_kwh, type: double, initial_value: '0' }
+  - { id: g_last_elec_export_kwh, type: double, initial_value: '0' }
   # gas kWh counted as it's used: each new m³ converted at the factor in force at that moment
   - { id: g_gas_kwh_total, type: double, restore_value: yes, initial_value: '0' }
   - { id: g_gas_kwh_base_m3, type: double, restore_value: yes, initial_value: '0' }
@@ -193,10 +193,18 @@ uart:
                 case 0x0400: if (r > -20000 && r < 30000) { id(elec_power).publish_state(r); id(g_last_reading_ms) = millis(); } break;
                 case 0x0000: {
                   double kwh = r / 1000.0;
-                  double last = id(g_last_elec_kwh);
-                  if (last == 0 || (kwh >= last && kwh - last < 10)) { id(g_last_elec_kwh) = kwh; id(elec_meter).publish_state(kwh); }
-                  else if (kwh < last && last - kwh < 0.05) ESP_LOGD("trio", "Ignored stale electricity reading %.3f (last %.3f)", kwh, last);
-                  else ESP_LOGW("trio", "Rejected electricity reading %.3f (last %.3f)", kwh, last);
+                  double last = id(g_last_elec_import_kwh);
+                  if (last == 0 || (kwh >= last && kwh - last < 10)) { id(g_last_elec_import_kwh) = kwh; id(elec_import_meter).publish_state(kwh); }
+                  else if (kwh < last && last - kwh < 0.05) ESP_LOGD("trio", "Ignored stale electricity import reading %.3f (last %.3f)", kwh, last);
+                  else ESP_LOGW("trio", "Rejected electricity import reading %.3f (last %.3f)", kwh, last);
+                  break;
+                }
+                case 0x0001: {
+                  double kwh = r / 1000.0;
+                  double last = id(g_last_elec_export_kwh);
+                  if (last == 0 || (kwh >= last && kwh - last < 10)) { id(g_last_elec_export_kwh) = kwh; id(elec_export_meter).publish_state(kwh); }
+                  else if (kwh < last && last - kwh < 0.05) ESP_LOGD("trio", "Ignored stale electricity export reading %.3f (last %.3f)", kwh, last);
+                  else ESP_LOGW("trio", "Rejected electricity export reading %.3f (last %.3f)", kwh, last);
                   break;
                 }
                 case 0x0401: {
@@ -349,8 +357,9 @@ interval:
 sensor:
   # Electricity
   - { platform: template, id: elec_power, name: "Electricity power", unit_of_measurement: W, device_class: power, state_class: measurement, accuracy_decimals: 0 }
-  - { platform: template, id: elec_meter, name: "Electricity meter", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3 }
+  - { platform: template, id: elec_import_meter, name: "Electricity import meter", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3 }
   - { platform: template, id: elec_today, name: "Electricity today", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3, filters: [ { delta: 0.01 } ] }
+  - { platform: template, id: elec_export_meter, name: "Electricity export meter", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3 }
   - platform: template
     id: elec_yesterday
     name: "Electricity yesterday"
