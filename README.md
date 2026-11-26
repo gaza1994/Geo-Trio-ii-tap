@@ -242,7 +242,7 @@ Full notes in [docs/home-assistant.md](docs/home-assistant.md). The essentials:
 
 ## Open questions
 
-- ~~**Solar export.**~~ **Confirmed** by a solar user in [issue #1](https://github.com/gaza1994/Geo-Trio-ii-tap/issues/1): export is attribute **0x0001** (*CurrentSummationReceived*) on electricity endpoint 1, matching the value the Trio shows (6,700.787 → 6,703.116 kWh while import stood still), and live power **goes negative** while exporting (−2,642 W in their capture). The firmware doesn't publish an export sensor yet: PRs welcome from anyone with solar to test it.
+- ~~**Solar export.**~~ **Confirmed** by a solar user in [issue #1](https://github.com/gaza1994/Geo-Trio-ii-tap/issues/1): export is attribute **0x0001** (*CurrentSummationReceived*) on electricity endpoint 1, matching the value the Trio shows (6,700.787 → 6,703.116 kWh while import stood still), and live power **goes negative** while exporting (−2,642 W in their capture). The firmware publishes it as `Electricity export meter`.
 - **Time-of-use tariffs.** Mine is a single rate. Publish Price has tier fields I haven't seen used.
 - **Message type 0x8073.** Valid, empty payload, rare. Probably an internal Zigbee stack event.
 

@@ -12,7 +12,7 @@ static const std::set<std::string> TRIO_KNOWN = {
   "E1-C0700-X00",
   "E1-C0700-X04",
   "E1-C0702-A0000",
-  "E1-C0702-A0001",
+  "E1-C0702-A0001",   // export register -> Electricity export meter
   "E1-C0702-A0014",
   "E1-C0702-A0200",
   "E1-C0702-A0300",

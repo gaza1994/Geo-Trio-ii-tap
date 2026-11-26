@@ -79,6 +79,7 @@ globals:
   - { id: g_tariff_time,   type: uint32_t, restore_value: yes, initial_value: '0' }
   # meter-reading sanity filters (not persisted)
   - { id: g_last_elec_kwh, type: double, initial_value: '0' }
+  - { id: g_last_export_kwh, type: double, initial_value: '0' }
   - { id: g_last_gas_m3,   type: double, initial_value: '0' }
   # gas kWh counted as it's used: each new m³ converted at the factor in force at that moment
   - { id: g_gas_kwh_total, type: double, restore_value: yes, initial_value: '0' }
@@ -197,6 +198,14 @@ uart:
                   if (last == 0 || (kwh >= last && kwh - last < 10)) { id(g_last_elec_kwh) = kwh; id(elec_meter).publish_state(kwh); }
                   else if (kwh < last && last - kwh < 0.05) ESP_LOGD("trio", "Ignored stale electricity reading %.3f (last %.3f)", kwh, last);
                   else ESP_LOGW("trio", "Rejected electricity reading %.3f (last %.3f)", kwh, last);
+                  break;
+                }
+                case 0x0001: {   // export register (CurrentSummationReceived), confirmed in issue #1
+                  double kwh = r / 1000.0;
+                  double last = id(g_last_export_kwh);
+                  if (last == 0 || (kwh >= last && kwh - last < 10)) { id(g_last_export_kwh) = kwh; id(elec_export_meter).publish_state(kwh); }
+                  else if (kwh < last && last - kwh < 0.05) ESP_LOGD("trio", "Ignored stale export reading %.3f (last %.3f)", kwh, last);
+                  else ESP_LOGW("trio", "Rejected export reading %.3f (last %.3f)", kwh, last);
                   break;
                 }
                 case 0x0401: {
@@ -350,6 +359,7 @@ sensor:
   # Electricity
   - { platform: template, id: elec_power, name: "Electricity power", unit_of_measurement: W, device_class: power, state_class: measurement, accuracy_decimals: 0 }
   - { platform: template, id: elec_meter, name: "Electricity meter", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3 }
+  - { platform: template, id: elec_export_meter, name: "Electricity export meter", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3 }
   - { platform: template, id: elec_today, name: "Electricity today", unit_of_measurement: kWh, device_class: energy, state_class: total_increasing, accuracy_decimals: 3, filters: [ { delta: 0.01 } ] }
   - platform: template
     id: elec_yesterday
