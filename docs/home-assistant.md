@@ -10,6 +10,7 @@ The C3 shows up through the ESPHome integration as one device. Everything below 
 |---|---|---|
 | Electricity power | every reading (~10 s) | live draw, cost per hour, alerts, Energy "Now" |
 | Electricity meter | every meter tick | **Energy dashboard** (electricity) |
+| Electricity export meter | every meter tick | **Energy dashboard** (return to grid, if you have solar) |
 | Electricity today / yesterday / this month | on 10 Wh change | glanceable cards |
 | Electricity cost today / yesterday / this month | on 1p change | glanceable cards (**includes standing charge**) |
 | Gas meter | every 30 min | the raw m³ reading |
@@ -42,6 +43,7 @@ Diagnostics:
 - Energy: `Electricity meter`
 - Price: *use an entity with current price* → `Electricity unit rate`
 - Live power (for the "Now" view): `Electricity power`
+- Return to grid (solar): `Electricity export meter`
 
 **Gas consumption**
 - Energy: **`Gas meter (kWh)`**
